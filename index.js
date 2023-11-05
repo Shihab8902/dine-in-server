@@ -4,6 +4,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
 
 
 const port = 9000;
@@ -16,6 +18,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -34,6 +37,27 @@ const client = new MongoClient(uri, {
 
 
 
+//Verify a token
+const verifyToken = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+        return res.status(401).send({ message: "unauthorized" });
+    }
+
+    jwt.verify(token, process.env.TOKEN_SECRET, (error, decoded) => {
+        if (error) {
+            return res.status(401).send({ message: "unauthorized" });
+        }
+        req.user = decoded;
+        next();
+    })
+}
+
+
+
+
+
 
 async function run() {
 
@@ -41,18 +65,24 @@ async function run() {
 
 
         const foodsCollection = client.db('dineinDB').collection('foods');
+        const usersCollection = client.db('dineinDB').collection("users");
 
 
 
         //create a token
         app.post("/jwt", async (req, res) => {
-            const user = req.body;
-            const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: "1h" });
-            res.cookie("token", token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "none"
-            }).send({ message: "success" });
+            try {
+                const user = req.body;
+                const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "none"
+                }).send({ message: "success" });
+            }
+            catch (error) {
+                console.log(error);
+            }
         });
 
 
@@ -73,8 +103,6 @@ async function run() {
             }
         });
 
-
-
         //Get individual food
         app.get("/food/:id", async (req, res) => {
             try {
@@ -87,6 +115,49 @@ async function run() {
                 console.log(error)
             }
 
+        });
+
+        //Get specific user added food
+        app.get("/myFood", verifyToken, async (req, res) => {
+            try {
+                const userEmail = req.query?.email;
+                if (req.user.email !== userEmail) {
+                    return res.status(403).send({ message: "forbidden" });
+                }
+
+                const query = { email: userEmail };
+                const result = await foodsCollection.find(query).toArray();
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error)
+            }
+
+
+        });
+
+        //Get users
+        app.get("/users", verifyToken, async (req, res) => {
+            try {
+                const result = await usersCollection.find().toArray();
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+
+
+        //Add a new user
+        app.post("/users", async (req, res) => {
+            try {
+                const user = req.body;
+                await usersCollection.insertOne(user);
+                res.send({ message: "success" })
+            }
+            catch (error) {
+                console.log(error);
+            }
         });
 
 
