@@ -34,22 +34,32 @@ const client = new MongoClient(uri, {
 
 
 
-//create a token
-app.post("/jwt", async (req, res) => {
-    const user = req.body;
-    const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: "1h" });
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-    }).send({ message: "success" });
-});
 
 async function run() {
 
     try {
 
+
         const foodsCollection = client.db('dineinDB').collection('foods');
+
+
+
+        //create a token
+        app.post("/jwt", async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "none"
+            }).send({ message: "success" });
+        });
+
+
+        //Clear token
+        app.get("/logout", (req, res) => {
+            res.clearCookie('token').send({ message: "success" });
+        });
 
 
         //Get top selling foods
