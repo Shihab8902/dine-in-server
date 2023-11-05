@@ -3,12 +3,18 @@ const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
+const jwt = require('jsonwebtoken');
 
 
 const port = 9000;
 
 //middlewares
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173'
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 
@@ -24,6 +30,19 @@ const client = new MongoClient(uri, {
         strict: true,
         deprecationErrors: true,
     }
+});
+
+
+
+//create a token
+app.post("/jwt", async (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    }).send({ message: "success" });
 });
 
 async function run() {
