@@ -120,12 +120,11 @@ async function run() {
         //Get specific user added food
         app.get("/myFood", verifyToken, async (req, res) => {
             try {
-                const userEmail = req.query?.email;
-                if (req.user.email !== userEmail) {
-                    return res.status(403).send({ message: "forbidden" });
+                const email = req.query.email;
+                if (req.user.email !== email) {
+                    return res.status(403).send({ message: "forbidden" })
                 }
-
-                const query = { email: userEmail };
+                const query = { userEmail: email };
                 const result = await foodsCollection.find(query).toArray();
                 res.send(result);
             }
@@ -135,6 +134,50 @@ async function run() {
 
 
         });
+
+
+        //Post a new food item
+        app.post('/addFood', async (req, res) => {
+            try {
+                const foodItem = req.body;
+                const result = await foodsCollection.insertOne(foodItem);
+                res.send(result)
+            }
+            catch (error) {
+                console.log(error)
+            }
+        });
+
+
+        //Update a food item
+        app.put("/updateFood/:id", async (req, res) => {
+            try {
+                const document = req.body;
+                const updatedItem = {
+                    $set: {
+                        name: document.name,
+                        image: document.image,
+                        category: document.category,
+                        quantity: document.quantity,
+                        price: document.price,
+                        username: document.username,
+                        userEmail: document.userEmail,
+                        foodOrigin: document.foodOrigin,
+                        description: document.description
+                    }
+                };
+                const id = req.params;
+
+                const filter = { _id: new ObjectId(id) };
+
+                const result = await foodsCollection.updateOne(filter, updatedItem);
+                res.send(result);
+
+            }
+            catch (error) {
+                console.log(error)
+            }
+        })
 
         //Get users
         app.get("/users", verifyToken, async (req, res) => {
