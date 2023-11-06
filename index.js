@@ -66,6 +66,7 @@ async function run() {
 
         const foodsCollection = client.db('dineinDB').collection('foods');
         const usersCollection = client.db('dineinDB').collection("users");
+        const orderCollection = client.db('dineinDB').collection("orders");
 
 
 
@@ -104,7 +105,7 @@ async function run() {
         });
 
 
-        //Get all foods
+        //Get all foods based on different conditions
         app.get("/foods", async (req, res) => {
 
             const { page, size, searchStr, filterStr } = req.query;
@@ -165,7 +166,43 @@ async function run() {
             catch (error) {
                 console.log(error)
             }
-        })
+        });
+
+
+        //Post new order
+        app.post("/order", async (req, res) => {
+            try {
+                const newOrder = req.body;
+                const result = await orderCollection.insertOne(newOrder);
+                res.send(result);
+            }
+            catch (error) {
+                console.log(eror);
+            }
+        });
+
+
+        //Update purchaseCount when purchase
+        app.put("/purchaseCount/:id", async (req, res) => {
+            try {
+                const { count } = req.body;
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const updatedDoc = {
+                    $set: {
+                        purchaseCount: parseInt(count)
+                    }
+                }
+                const result = await foodsCollection.updateOne(query, updatedDoc)
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+
+
+
 
         //Get individual food
         app.get("/food/:id", async (req, res) => {
