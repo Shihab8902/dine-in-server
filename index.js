@@ -103,6 +103,42 @@ async function run() {
             }
         });
 
+
+        //Get all foods
+        app.get("/foods", async (req, res) => {
+
+            const { page, size } = req.query;
+
+            let query = foodsCollection.find();
+
+            if (page && size) {
+                const pageInt = parseInt(page);
+                const sizeInt = parseInt(size);
+                query = query.skip(pageInt * sizeInt).limit(sizeInt);
+            }
+
+            try {
+                const result = await query.toArray();
+                res.send(result);
+            }
+
+            catch (error) {
+                console.log(error);
+            }
+        });
+
+
+        //Get total foods number
+        app.get("/totalFoods", async (req, res) => {
+            try {
+                const total = await foodsCollection.estimatedDocumentCount();
+                res.send({ total });
+            }
+            catch (error) {
+                console.log(error)
+            }
+        })
+
         //Get individual food
         app.get("/food/:id", async (req, res) => {
             try {
@@ -129,7 +165,7 @@ async function run() {
                 res.send(result);
             }
             catch (error) {
-                console.log(error)
+                console.log(error);
             }
 
 
