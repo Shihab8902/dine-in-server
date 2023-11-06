@@ -13,7 +13,7 @@ const port = 9000;
 //middlewares
 app.use(cors({
     origin: [
-        'http://localhost:5173'
+        "https://dineinbyshihab.netlify.app"
     ],
     credentials: true
 }));
