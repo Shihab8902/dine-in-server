@@ -107,18 +107,46 @@ async function run() {
         //Get all foods
         app.get("/foods", async (req, res) => {
 
-            const { page, size } = req.query;
+            const { page, size, searchStr, filterStr } = req.query;
 
-            let query = foodsCollection.find();
+
+            //handle search operation
+            let filter = {};
+
+            if (searchStr) {
+                filter.name = { $regex: searchStr, $options: 'i' };
+            }
+
+
+            //handle pagination operation
+
+            let option = {};
 
             if (page && size) {
                 const pageInt = parseInt(page);
                 const sizeInt = parseInt(size);
-                query = query.skip(pageInt * sizeInt).limit(sizeInt);
+                option.skip = pageInt * sizeInt;
+                option.limit = sizeInt;
             }
 
+
+            //handle filter operation
+            let foodSortOrder = 1;
+
+            if (filterStr === "lowToHigh") {
+                foodSortOrder = 1;
+            } else if (filterStr === "highToLow") {
+                foodSortOrder = -1;
+            }
+
+
+            if (filterStr === "lowToHigh" || filter === "highToLow") {
+                option.sort = { price: foodSortOrder };
+            }
+
+
             try {
-                const result = await query.toArray();
+                const result = await foodsCollection.find(filter, option).toArray();
                 res.send(result);
             }
 
