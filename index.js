@@ -67,6 +67,7 @@ async function run() {
         const foodsCollection = client.db('dineinDB').collection('foods');
         const usersCollection = client.db('dineinDB').collection("users");
         const orderCollection = client.db('dineinDB').collection("orders");
+        const blogCollection = client.db("dineinDB").collection("blogs");
 
 
 
@@ -203,6 +204,39 @@ async function run() {
 
 
 
+        //Get specific user ordered food
+        app.get("/myOrder", verifyToken, async (req, res) => {
+            try {
+                const { user } = req.query;
+                if (req.user.email !== user) {
+                    return res.status(403).send({ message: "forbidden" })
+                }
+                const query = { purchaseBy: user }
+                const result = await orderCollection.find(query).toArray();
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error)
+            }
+
+        });
+
+
+        //Delete an order
+        app.delete("/myOrder/:id", async (req, res) => {
+            try {
+                const { id } = req.params;
+                const filter = { _id: new ObjectId(id) };
+                const result = await orderCollection.deleteOne(filter);
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error)
+            }
+        });
+
+
+
 
         //Get individual food
         app.get("/food/:id", async (req, res) => {
@@ -278,6 +312,18 @@ async function run() {
             catch (error) {
                 console.log(error)
             }
+        });
+
+
+        // Get the blogs
+        app.get("/blogs", async (req, res) => {
+            try {
+                const result = await blogCollection.find().toArray();
+                res.send(result);
+            }
+            catch (error) {
+                console.log(error);
+            }
         })
 
         //Get users
@@ -290,6 +336,7 @@ async function run() {
                 console.log(error);
             }
         });
+
 
 
         //Add a new user
