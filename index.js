@@ -13,7 +13,8 @@ const port = 9000;
 //middlewares
 app.use(cors({
     origin: [
-        "https://dineinbyshihab.netlify.app"
+        "https://dineinbyshihab.netlify.app",
+
     ],
     credentials: true
 }));
@@ -186,12 +187,13 @@ async function run() {
         //Update purchaseCount when purchase
         app.put("/purchaseCount/:id", async (req, res) => {
             try {
-                const { count } = req.body;
+                const { count, newQuantity } = req.body;
                 const id = req.params.id;
                 const query = { _id: new ObjectId(id) };
                 const updatedDoc = {
                     $set: {
-                        purchaseCount: parseInt(count)
+                        purchaseCount: parseInt(count),
+                        quantity: parseInt(newQuantity)
                     }
                 }
                 const result = await foodsCollection.updateOne(query, updatedDoc)
