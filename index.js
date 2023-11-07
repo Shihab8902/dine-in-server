@@ -12,10 +12,8 @@ const port = 9000;
 
 //middlewares
 app.use(cors({
-    origin: [
-        "https://dineinbyshihab.netlify.app",
-
-    ],
+    origin: "https://dineinbyshihab.netlify.app",
+    methods: "GET, POST, PUT, DELETE",
     credentials: true
 }));
 app.use(express.json());
